@@ -1,27 +1,38 @@
-## Devvit React Starter
+# Daily Quest Quest (Hybrid Version)
 
-A starter to build web applications on Reddit's developer platform
+Daily Quest Quest is a Reddit-native interactive game challenge that refreshes every 24 hours. Built with **Devvit Web**, it combines the power of **React** for UI/Leaderboards and **Phaser.js** for high-performance mini-games.
 
-- [Devvit](https://developers.reddit.com/): A way to build and deploy immersive games on Reddit
-- [Vite](https://vite.dev/): For compiling the webView
-- [React](https://react.dev/): For UI
-- [Hono](https://hono.dev/): For backend logic
-- [Tailwind](https://tailwindcss.com/): For styles
-- [TypeScript](https://www.typescriptlang.org/): For type safety
+## 🚀 Features
+- **Deterministic Daily Loop**: Everyone plays the same quest each day, generated via `SHA256(current_UTC_date)`.
+- **Hybrid Architecture**: Smooth React-based menus and leaderboards surrounding a custom Phaser game engine core.
+- **3 Mini-Games (MVP)**:
+  1. **Trend Trivia**: Test your knowledge of public subreddit trends.
+  2. **Pattern Match**: A visual memory challenge.
+  3. **Echo Breaker**: Identify cognitive biases in neutral, generic examples.
+- **Subreddit Leaderboards**: Compete with your community for the top daily score.
 
-## Getting Started
+## 🛠️ Tech Stack
+- **Frontend**: React, Phaser.js, Tailwind CSS, Vite.
+- **Backend**: Devvit (Hono), Redis for persistent scores.
+- **Encryption**: CryptoJS for deterministic seed generation.
 
-> Make sure you have Node 22 downloaded on your machine before running!
+## 📱 Mobile First
+Designed for the Reddit mobile app with large touch targets, responsive scaling, and a dark-mode default aesthetic.
 
-1. Run `npm create devvit@latest --template=react`
-2. Go through the installation wizard. You will need to create a Reddit account and connect it to Reddit developers
-3. Copy the command on the success page into your terminal
+## 🏆 Prize Targets
+- Best Daily Game
+- Best Mobile Gameplay
+- Best Use of User Contributions (Subreddit Trivia)
 
-## Commands
+## 📜 Compliance
+- No PII storage.
+- Respectful content moderation (safe-list subreddits).
+- No external monetization.
+- High performance (< 1.5MB bundle).
 
-- `npm run dev`: Starts a development server where you can develop your application live on Reddit.
-- `npm run build`: Builds your client and server projects
-- `npm run deploy`: Uploads a new version of your app
-- `npm run launch`: Publishes your app for review
-- `npm run login`: Logs your CLI into Reddit
-- `npm run type-check`: Type checks, lints, and prettifies your app
+## 🛠️ Installation & Playtest
+```bash
+npm install
+devvit login
+devvit playtest
+```

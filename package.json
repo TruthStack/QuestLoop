@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "<% name %>",
+  "name": "daily-quest-quest",
   "version": "0.0.0",
   "license": "BSD-3-Clause",
   "type": "module",
@@ -22,9 +22,12 @@
     "@devvit/start": "0.12.12",
     "@devvit/web": "0.12.12",
     "@hono/node-server": "^1.19.9",
+    "@types/crypto-js": "^4.2.2",
     "clsx": "2.1.1",
+    "crypto-js": "^4.2.0",
     "devvit": "0.12.12",
     "hono": "4.11.7",
+    "phaser": "^3.88.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "tailwind-merge": "3.4.0"
