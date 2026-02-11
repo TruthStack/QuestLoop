@@ -24,27 +24,82 @@ export class MainScene extends Phaser.Scene {
     this.state = { ...this.state, ...data };
   }
 
+  preload() {
+    // Generate simple particle texture
+    const graphics = this.make.graphics({ x: 0, y: 0 });
+    graphics.fillStyle(0xffffff);
+    graphics.fillCircle(2, 2, 2);
+    graphics.generateTexture('dot', 4, 4);
+    graphics.destroy();
+  }
+
   create() {
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000).setOrigin(0);
     
-    this.add.text(GAME_WIDTH / 2, 80, 'DAILY QUEST', {
-      fontSize: '48px',
-      color: '#ff4500',
-      fontStyle: 'bold'
-    }).setOrigin(0.5);
+    // Background Wow: Starfield
+    this.add.particles(0, 0, 'dot', {
+      x: { min: 0, max: GAME_WIDTH },
+      y: { min: 0, max: GAME_HEIGHT },
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 0.5, end: 0 },
+      speed: 20,
+      lifespan: 3000,
+      frequency: 100
+    });
 
-    const startButton = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-    const bg = this.add.rectangle(0, 0, 200, 60, 0xff4500).setInteractive({ useHandCursor: true });
+    const title = this.add.text(GAME_WIDTH / 2, 120, 'DAILY QUEST', {
+      fontSize: '56px',
+      color: '#ff4500',
+      fontStyle: 'bold',
+      stroke: '#ffffff',
+      strokeThickness: 2
+    }).setOrigin(0.5);
+    
+    this.tweens.add({
+      targets: title,
+      scaleX: 1.1,
+      scaleY: 1.1,
+      duration: 1000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    const startButton = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50);
+    const bg = this.add.rectangle(0, 0, 240, 70, 0xff4500).setInteractive({ useHandCursor: true });
     const text = this.add.text(0, 0, 'START QUEST', {
-      fontSize: '24px',
+      fontSize: '28px',
       color: '#ffffff',
       fontStyle: 'bold'
     }).setOrigin(0.5);
     startButton.add([bg, text]);
 
-    bg.on('pointerdown', () => {
-      this.scene.start('TriviaScene', this.state);
+    bg.on('pointerover', () => { 
+        bg.setStrokeStyle(4, 0xffffff); 
+        this.tweens.add({ targets: startButton, scale: 1.1, duration: 100 }); 
     });
+    bg.on('pointerout', () => { 
+        bg.setStrokeStyle(0); 
+        this.tweens.add({ targets: startButton, scale: 1, duration: 100 }); 
+    });
+
+    bg.on('pointerdown', () => {
+      this.add.particles(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50, 'dot', {
+        speed: { min: -100, max: 100 },
+        angle: { min: 0, max: 360 },
+        scale: { start: 1, end: 0 },
+        lifespan: 500,
+        emitZone: { type: 'random', source: new Phaser.Geom.Rectangle(-20, -20, 40, 40), quantity: 1 } as any
+      }).explode(20);
+      this.time.delayedCall(300, () => this.scene.start('TriviaScene', this.state));
+    });
+
+    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 100, '3 FAST CHALLENGES\n1 DAILY LEADERBOARD\nPLAY FOR GLORY', {
+      fontSize: '14px',
+      color: '#ff4500',
+      align: 'center',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
 
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 50, 'Check Leaderboard on Desktop', {
       fontSize: '14px',
@@ -143,7 +198,10 @@ export class TriviaScene extends Phaser.Scene {
   finish() {
     this.timer.remove();
     this.state.totalScore += this.score;
-    this.scene.start('PatternScene', this.state);
+    this.cameras.main.fadeOut(500, 0, 0, 0);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.start('PatternScene', this.state);
+    });
   }
 }
 
@@ -244,7 +302,10 @@ export class PatternScene extends Phaser.Scene {
   finish() {
     const score = (this.currentRound - 1) * 20;
     this.state.totalScore += score;
-    this.scene.start('EchoScene', this.state);
+    this.cameras.main.fadeOut(500, 0, 0, 0);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.start('EchoScene', this.state);
+    });
   }
 
   private wait(ms: number) {
@@ -334,11 +395,23 @@ export class EchoScene extends Phaser.Scene {
   async finish() {
     this.state.totalScore += this.score;
     this.add.rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.8).setOrigin(0);
+    
+    // Celebratory Particle Fountain
+    this.add.particles(GAME_WIDTH / 2, GAME_HEIGHT + 50, 'dot', {
+        angle: { min: 240, max: 300 },
+        speed: { min: 400, max: 600 },
+        gravityY: 400,
+        lifespan: 4000,
+        scale: { start: 1, end: 0 },
+        tint: [0xff4500, 0xffffff, 0xffff00],
+    }).explode(100);
+
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, 'QUEST COMPLETE!', {
       fontSize: '40px',
       color: '#ff4500',
       fontStyle: 'bold'
     }).setOrigin(0.5);
+    
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20, `Total Score: ${this.state.totalScore}`, {
       fontSize: '24px',
       color: '#ffffff'
@@ -355,7 +428,7 @@ export class EchoScene extends Phaser.Scene {
       console.error('Failed to submit score', e);
     }
 
-    this.time.delayedCall(3000, () => {
+    this.time.delayedCall(4000, () => {
       this.scene.start('MainScene', this.state);
     });
   }

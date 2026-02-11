@@ -5,6 +5,8 @@ export type InitResponse = {
   dailySeed: string;
   completedQuests: string[];
   leaderboard: { username: string; score: number }[];
+  streak: number;
+  nextQuestIn: number; // Seconds until UTC midnight
 };
 
 export type SubmitScoreRequest = {

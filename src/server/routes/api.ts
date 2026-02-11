@@ -25,6 +25,27 @@ api.get('/init', async (c) => {
     const dailySeed = getDailySeed();
     const username = await reddit.getCurrentUsername() || 'anonymous';
     
+    // Calculate countdown to next UTC midnight
+    const now = new Date();
+    const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+    const nextQuestIn = Math.floor((tomorrow.getTime() - now.getTime()) / 1000);
+
+    // Fetch streak
+    const streakKey = `user:${username}:streak`;
+    const lastDayKey = `user:${username}:last_day`;
+    let streak = parseInt(await redis.get(streakKey) || '0');
+    const lastActiveDay = await redis.get(lastDayKey);
+
+    // Reset streak if more than 1 day missed
+    if (lastActiveDay) {
+        const lastDate = new Date(lastActiveDay);
+        const diffDays = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
+        if (diffDays > 1) {
+            streak = 0;
+            await redis.set(streakKey, '0');
+        }
+    }
+
     // Fetch completed quests for this user today
     const userKey = `user:${username}:${dailySeed}:completed`;
     const completedQuestsJson = await redis.get(userKey);
@@ -44,7 +65,9 @@ api.get('/init', async (c) => {
       username,
       dailySeed,
       completedQuests,
-      leaderboard
+      leaderboard,
+      streak,
+      nextQuestIn
     });
   } catch (error) {
     console.error('API Init Error:', error);
@@ -55,8 +78,10 @@ api.get('/init', async (c) => {
 api.post('/submit-score', async (c) => {
   const username = await reddit.getCurrentUsername() || 'anonymous';
   const dailySeed = getDailySeed();
+  const now = new Date();
+  const todayStr = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}`;
   
-  const body = await c.req.json() as SubmitScoreRequest;
+  const body = (await c.req.json()) as SubmitScoreRequest;
   
   try {
     const userKey = `user:${username}:${dailySeed}:completed`;
@@ -75,6 +100,15 @@ api.post('/submit-score', async (c) => {
       const totalScore = await redis.get(scoreKey);
       const leaderboardKey = `leaderboard:${dailySeed}`;
       await redis.zAdd(leaderboardKey, { member: username, score: parseInt(totalScore || '0') });
+
+      // Update Streak on first quest completion of the day
+      const lastDayKey = `user:${username}:last_day`;
+      const lastActiveDay = await redis.get(lastDayKey);
+      if (lastActiveDay !== todayStr) {
+          const streakKey = `user:${username}:streak`;
+          await redis.incrBy(streakKey, 1);
+          await redis.set(lastDayKey, todayStr);
+      }
     }
 
     return c.json<SubmitScoreResponse>({ status: 'success' });
